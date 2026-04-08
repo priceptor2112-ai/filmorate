@@ -19,6 +19,9 @@ public class UserController {
     private final UserStorage userStorage;
     private final UserService userService;
 
+    private static final String FRIENDS_PATH = "/{id}/friends/{friendId}";
+    private static final String COMMON_FRIENDS_PATH = "/{id}/friends/common/{otherId}";
+
     @Autowired
     public UserController(UserStorage userStorage, UserService userService) {
         this.userStorage = userStorage;
@@ -69,13 +72,13 @@ public class UserController {
         return userStorage.update(user);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
+    @PutMapping(FRIENDS_PATH)
     public void addFriend(@PathVariable int id, @PathVariable int friendId) {
         log.info("PUT /users/{}/friends/{} - добавление в друзья", id, friendId);
         userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
+    @DeleteMapping(FRIENDS_PATH)
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
         log.info("DELETE /users/{}/friends/{} - удаление из друзей", id, friendId);
         userService.removeFriend(id, friendId);
@@ -87,7 +90,7 @@ public class UserController {
         return userService.getFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
+    @GetMapping(COMMON_FRIENDS_PATH)
     public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
         log.info("GET /users/{}/friends/common/{} - получение общих друзей", id, otherId);
         return userService.getCommonFriends(id, otherId);

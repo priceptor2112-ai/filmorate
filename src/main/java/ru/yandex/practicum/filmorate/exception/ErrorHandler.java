@@ -14,29 +14,29 @@ public class ErrorHandler {
 
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidation(ValidationException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
-        return Map.of("error", "Ошибка валидации", "message", e.getMessage());
+    public Map<String, String> handleValidation(ValidationException exception) {
+        log.error("Ошибка валидации: {}", exception.getMessage());
+        return Map.of("error", "Ошибка валидации", "message", exception.getMessage());
     }
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotFound(NotFoundException e) {
-        log.error("Объект не найден: {}", e.getMessage());
-        return Map.of("error", "Объект не найден", "message", e.getMessage());
+    public Map<String, String> handleNotFound(NotFoundException exception) {
+        log.error("Объект не найден: {}", exception.getMessage());
+        return Map.of("error", "Объект не найден", "message", exception.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleIllegalArgument(IllegalArgumentException e) {
-        log.error("Некорректный аргумент: {}", e.getMessage());
-        return Map.of("error", "Некорректный запрос", "message", e.getMessage());
+    public Map<String, String> handleIllegalArgument(IllegalArgumentException exception) {
+        log.error("Некорректный аргумент: {}", exception.getMessage());
+        return Map.of("error", "Некорректный запрос", "message", exception.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleAny(Exception e) {
-        log.error("Внутренняя ошибка сервера: {}", e.getMessage(), e);
-        return Map.of("error", "Внутренняя ошибка сервера", "message", e.getMessage());
+    public Map<String, String> handleAny(Exception exception) {
+        log.error("Внутренняя ошибка сервера: {}", exception.getMessage(), exception);
+        return Map.of("error", "Внутренняя ошибка сервера", "message", exception.getMessage());
     }
 }
