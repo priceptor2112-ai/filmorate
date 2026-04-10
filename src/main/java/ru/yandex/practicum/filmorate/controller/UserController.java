@@ -1,46 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int currentId = 1;
+    private final UserStorage userStorage;
+    private final UserService userService;
+
+    private static final String FRIENDS_PATH = "/{id}/friends/{friendId}";
+    private static final String COMMON_FRIENDS_PATH = "/{id}/friends/common/{otherId}";
+
+    @Autowired
+    public UserController(UserStorage userStorage, UserService userService) {
+        this.userStorage = userStorage;
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<User> getAllUsers() {
         log.info("GET /users - запрос на получение всех пользователей");
-        return new ArrayList<>(users.values());
+        return userStorage.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) {
+        log.info("GET /users/{} - запрос на получение пользователя", id);
+        return userStorage.findById(id);
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@Valid @RequestBody User user) {
         log.info("POST /users - запрос на создание пользователя: {}", user);
         validateUser(user);
 
-        // Если имя пустое, используем логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Имя пользователя не указано, используется логин: {}", user.getLogin());
         }
 
-        user.setId(currentId++);
-        users.put(user.getId(), user);
-
-        log.info("Пользователь успешно создан с ID {}: {}", user.getId(), user);
-        return user;
+        return userStorage.create(user);
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         log.info("PUT /users - запрос на обновление пользователя: {}", user);
 
         if (user.getId() <= 0) {
@@ -48,23 +62,38 @@ public class UserController {
             throw new ValidationException("ID пользователя должен быть указан");
         }
 
-        if (!users.containsKey(user.getId())) {
-            log.error("Пользователь с ID {} не найден", user.getId());
-            throw new ValidationException("Пользователь с id " + user.getId() + " не найден");
-        }
-
         validateUser(user);
 
-        // Если имя пустое, используем логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Имя пользователя не указано, используется логин: {}", user.getLogin());
         }
 
-        users.put(user.getId(), user);
+        return userStorage.update(user);
+    }
 
-        log.info("Пользователь успешно обновлен: {}", user);
-        return user;
+    @PutMapping(FRIENDS_PATH)
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("PUT /users/{}/friends/{} - добавление в друзья", id, friendId);
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping(FRIENDS_PATH)
+    public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("DELETE /users/{}/friends/{} - удаление из друзей", id, friendId);
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        log.info("GET /users/{}/friends - получение списка друзей", id);
+        return userService.getFriends(id);
+    }
+
+    @GetMapping(COMMON_FRIENDS_PATH)
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.info("GET /users/{}/friends/common/{} - получение общих друзей", id, otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 
     private void validateUser(User user) {
@@ -74,8 +103,9 @@ public class UserController {
             throw new ValidationException("Email не может быть пустым");
         }
 
-        if (!user.getEmail().contains("@")) {
-            log.error("Ошибка валидации: email {} не содержит @", user.getEmail());
+        String email = user.getEmail();
+        if (!email.contains("@") || email.indexOf("@") == 0 || email.indexOf("@") == email.length() - 1) {
+            log.error("Ошибка валидации: email {} не содержит @ или @ в неправильной позиции", email);
             throw new ValidationException("Email должен содержать символ @");
         }
 
