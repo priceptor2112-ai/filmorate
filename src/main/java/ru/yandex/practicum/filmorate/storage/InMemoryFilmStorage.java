@@ -23,6 +23,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film findById(int id) {
         Film film = films.get(id);
         if (film == null) {
+            log.error(String.format("ильм с id %d не найден", id));
             throw new NotFoundException(String.format("ильм с id %d не найден", id));
         }
         return film;
@@ -32,15 +33,18 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film create(Film film) {
         film.setId(currentId++);
         films.put(film.getId(), film);
+        log.info("Создан фильм: {}", film);
         return film;
     }
 
     @Override
     public Film update(Film film) {
         if (!films.containsKey(film.getId())) {
+            log.error(String.format("ильм с id %d не найден", film.getId()));
             throw new NotFoundException(String.format("ильм с id %d не найден", film.getId()));
         }
         films.put(film.getId(), film);
+        log.info("бновлён фильм: {}", film);
         return film;
     }
 
@@ -50,6 +54,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException(String.format("ильм с id %d не найден", id));
         }
         films.remove(id);
+        log.info(String.format("далён фильм с id %d", id));
     }
 
     @Override
@@ -61,12 +66,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     public void addLike(int filmId, int userId) {
         Film film = findById(filmId);
         film.addLike(userId);
+        log.info("ользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
     @Override
     public void removeLike(int filmId, int userId) {
         Film film = findById(filmId);
         film.removeLike(userId);
+        log.info("ользователь {} удалил лайк у фильма {}", userId, filmId);
     }
 
     @Override
