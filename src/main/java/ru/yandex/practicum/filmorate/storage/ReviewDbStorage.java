@@ -57,7 +57,7 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql = "UPDATE reviews SET content = ?, is_positive = ? WHERE id = ?";
         int updated = jdbcTemplate.update(sql, review.getContent(), review.getIsPositive(), review.getId());
         if (updated == 0) {
-            throw new NotFoundException("тзыв с id " + review.getId() + " не найден");
+            throw new NotFoundException(String.format("тзыв с id %d не найден", review.getId()));
         }
         return findById(review.getId());
     }
@@ -67,7 +67,7 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql = "DELETE FROM reviews WHERE id = ?";
         int deleted = jdbcTemplate.update(sql, id);
         if (deleted == 0) {
-            throw new NotFoundException("тзыв с id " + id + " не найден");
+            throw new NotFoundException(String.format("тзыв с id %d не найден", id));
         }
     }
 
@@ -76,7 +76,7 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql = "SELECT * FROM reviews WHERE id = ?";
         List<Review> reviews = jdbcTemplate.query(sql, reviewRowMapper, id);
         if (reviews.isEmpty()) {
-            throw new NotFoundException("тзыв с id " + id + " не найден");
+            throw new NotFoundException(String.format("тзыв с id %d не найден", id));
         }
         return reviews.get(0);
     }
